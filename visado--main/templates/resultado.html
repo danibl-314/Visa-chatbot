@@ -59,19 +59,23 @@
                                 <h4>👤 Información Personal</h4>
                                 <div class="detail-item">
                                     <strong>Nombre:</strong>
-                                    {{ result.user_data.name }}
+                                    {# CORREGIDO: Acceso seguro a user_data #}
+                                    {{ result.get('user_data', {}).get('name', 'N/A') }}
                                 </div>
                                 <div class="detail-item">
                                     <strong>Email:</strong>
-                                    {{ result.user_data.email }}
+                                    {# CORREGIDO: Acceso seguro a user_data #}
+                                    {{ result.get('user_data', {}).get('email', 'N/A') }}
                                 </div>
                                 <div class="detail-item">
                                     <strong>Teléfono:</strong>
-                                    {{ result.user_data.phone }}
+                                    {# CORREGIDO: Acceso seguro a user_data #}
+                                    {{ result.get('user_data', {}).get('phone', 'N/A') }}
                                 </div>
                                 <div class="detail-item">
                                     <strong>Pasaporte:</strong>
-                                    {{ result.user_data.passport }}
+                                    {# CORREGIDO: Acceso seguro a user_data #}
+                                    {{ result.get('user_data', {}).get('passport', 'N/A') }}
                                 </div>
                             </div>
                         </div>
@@ -161,11 +165,20 @@
                         <div class="print-content">
                             <h3>Comprobante de Cita - Sistema de Visa</h3>
                             <p><strong>ID de Cita:</strong> {{ result.appointment_id }}</p>
-                            <p><strong>Nombre:</strong> {{ result.user_data.name }}</p>
+                            <p><strong>Nombre:</strong> 
+                                {# CORREGIDO: Acceso seguro a user_data #}
+                                {{ result.get('user_data', {}).get('name', 'N/A') }}
+                            </p>
                             <p><strong>Fecha:</strong> {{ result.date }}</p>
                             <p><strong>Hora:</strong> {{ result.time }}</p>
-                            <p><strong>Pasaporte:</strong> {{ result.user_data.passport }}</p>
-                            <p><strong>Fecha de agendamiento:</strong> {{ result.user_data.get('created_at', 'Hoy') }}</p>
+                            <p><strong>Pasaporte:</strong> 
+                                {# CORREGIDO: Acceso seguro a user_data #}
+                                {{ result.get('user_data', {}).get('passport', 'N/A') }}
+                            </p>
+                            <p><strong>Fecha de agendamiento:</strong> 
+                                {# CORREGIDO: Acceso seguro a user_data #}
+                                {{ result.get('user_data', {}).get('created_at', 'Hoy') }}
+                            </p>
                             <hr>
                             <p><em>Por favor, presente este comprobante al llegar a su cita.</em></p>
                         </div>
