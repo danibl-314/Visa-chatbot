@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Citas para Visa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ Sistema de Agendamiento de Citas para Visa</h1>
+            <p class="subtitle">Sistema inteligente con árbol de decisiones</p>
+        </header>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}" class="nav-link active">🏠 Inicio</a>
+            <a href="{{ url_for('agendar') }}" class="nav-link">📅 Agendar Cita</a>
+            <a href="{{ url_for('admin') }}" class="nav-link">👨‍💼 Panel Administrativo</a>
+        </nav>
+        
+        <main>
+            <div class="welcome-section">
+                <h2>Bienvenido al Sistema de Citas para Visa</h2>
+                <p class="intro-text">Este sistema utiliza un árbol de decisiones inteligente para optimizar el agendamiento de citas y garantizar una atención eficiente.</p>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">📅</div>
+                        <h3>Agendamiento Flexible</h3>
+                        <p>Seleccione su fecha y hora preferida. El sistema se adapta a su disponibilidad.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>Asignación Automática Inteligente</h3>
+                        <p>Cuando hay pocas citas disponibles, el sistema asigna automáticamente la mejor opción.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🏢</div>
+                        <h3>Múltiples Módulos de Atención</h3>
+                        <p>5 módulos de atención simultánea para reducir tiempos de espera.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Gestión Eficiente</h3>
+                        <p>Sistema optimizado que maximiza la capacidad de atención diaria.</p>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="{{ url_for('agendar') }}" class="btn btn-primary btn-large">
+                        📅 Agendar Mi Cita
+                    </a>
+                    <a href="{{ url_for('admin') }}" class="btn btn-secondary btn-large">
+                        👨‍💼 Acceso Administrativo
+                    </a>
+                </div>
+
+                <div class="system-info">
+                    <h3>¿Cómo funciona el árbol de decisiones?</h3>
+                    <div class="decision-tree">
+                        <div class="tree-step">
+                            <span class="step-number">1</span>
+                            <div class="step-content">
+                                <h4>Preferencia del Usuario</h4>
+                                <p>Intenta asignar la fecha y hora exacta solicitada</p>
+                            </div>
+                        </div>
+                        <div class="tree-step">
+                            <span class="step-number">2</span>
+                            <div class="step-content">
+                                <h4>Alternativas Mismo Día</h4>
+                                <p>Busca horarios disponibles el mismo día cuando quedan pocas citas</p>
+                            </div>
+                        </div>
+                        <div class="tree-step">
+                            <span class="step-number">3</span>
+                            <div class="step-content">
+                                <h4>Próximos Días</h4>
+                                <p>Busca el mismo horario en los próximos 3 días</p>
+                            </div>
+                        </div>
+                        <div class="tree-step">
+                            <span class="step-number">4</span>
+                            <div class="step-content">
+                                <h4>Primer Disponible</h4>
+                                <p>Asigna el primer slot disponible encontrado</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <h3>📊 Sistema en Tiempo Real</h3>
+                    <div class="stats-mini">
+                        <div class="stat-mini">
+                            <div class="stat-mini-icon">🕒</div>
+                            <div class="stat-mini-text">
+                                <strong>Horarios Diarios</strong>
+                                <span>6 horarios disponibles</span>
+                            </div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-icon">👥</div>
+                            <div class="stat-mini-text">
+                                <strong>Capacidad por Horario</strong>
+                                <span>10 personas máximo</span>
+                            </div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-icon">🏢</div>
+                            <div class="stat-mini-text">
+                                <strong>Módulos de Atención</strong>
+                                <span>5 módulos simultáneos</span>
+                            </div>
+    <div id="chatbot-container" class="chatbot-container">
+    <div class="chatbot-header" onclick="toggleChat()">
+        Chat Asistente 💬 (VisaBot)
+    </div>
+    <div id="chatbot-window" class="chatbot-window">
+        <div id="chat-history" class="chat-history">
+            <div class="message bot-message initial-message">
+                ¡Hola! Soy VisaBot, tu asistente para citas. ¿En qué puedo ayudarte hoy?
+                <br><br>
+                **1**. Agendar una nueva cita.
+                <br>**2**. Consultar disponibilidad.
+                <br>**3**. Modificar o Cancelar.
+                <br>**4**. Finalizar.
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Escribe tu opción o mensaje..." onkeydown="handleKey(event)">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<button id="chat-toggle-button" class="chat-toggle-button" onclick="toggleChat()">
+    💬
+</button>
+
+<script>
+    // 1. OBTENER ELEMENTOS
+    const chatContainer = document.getElementById('chatbot-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const chatToggleButton = document.getElementById('chat-toggle-button'); // <-- Nueva referencia
+
+    // 2. FUNCIÓN DE MOSTRAR/OCULTAR (TOGGLE)
+    function toggleChat() {
+        // Alterna la clase 'active' en el contenedor principal (esto controla el display: flex/none en CSS)
+        chatContainer.classList.toggle('active');
+
+        if (chatContainer.classList.contains('active')) {
+            // Si el chat está ABIERTO: Cambia el botón a cerrar (X y Rojo)
+            chatToggleButton.innerHTML = '✖️';
+            chatToggleButton.style.background = '#e74c3c'; // Rojo
+            chatInput.focus();
+        } else {
+            // Si el chat está CERRADO: Vuelve el botón a abrir (💬 y Verde)
+            chatToggleButton.innerHTML = '💬';
+            chatToggleButton.style.background = '#27ae60'; // Verde
+        }
+    }
+
+    // 3. AÑADIR MENSAJE AL HISTORIAL
+    function appendMessage(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        // Usa innerHTML para interpretar los saltos de línea y el formato (negritas)
+        messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // 4. ENVÍO DE MENSAJE A FLASK
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message === '') return;
+
+        appendMessage('user', message);
+        chatInput.value = '';
+        chatInput.disabled = true;
+
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('message', 'bot-message', 'loading-indicator');
+        loadingMessage.innerHTML = 'Escribiendo...';
+        chatHistory.appendChild(loadingMessage);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        fetch('/chatbot_api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', data.response);
+            chatInput.disabled = false;
+            chatInput.focus();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', '❌ Error: No se pudo conectar con el asistente. Escribe **MENU** para reiniciar.');
+            chatInput.disabled = false;
+        });
+    }
+
+    // 5. MANEJAR TECLA ENTER
+    function handleKey(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    // 6. INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', function() {
+        // Asegura que el chatbox esté cerrado al cargar la página
+        chatContainer.classList.remove('active');
+        // Asegura que el botón de toggle tenga el icono y color inicial correcto
+        chatToggleButton.innerHTML = '💬';
+        chatToggleButton.style.background = '#27ae60'; 
+    });
+</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Sistema de Agendamiento de Citas para Visa. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <style>
+        .step-content h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .step-content p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .quick-stats {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .stats-mini {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-mini-icon {
+            font-size: 2rem;
+        }
+
+        .stat-mini-text {
+            flex: 1;
+        }
+
+        .stat-mini-text strong {
+            display: block;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-mini-text span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</body>
+</html>

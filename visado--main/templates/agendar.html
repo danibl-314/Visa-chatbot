@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Cita - Sistema de Visa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 Agendar Cita para Visa</h1>
+            <p class="subtitle">Complete el formulario para programar su cita</p>
+        </header>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}" class="nav-link">🏠 Inicio</a>
+            <a href="{{ url_for('agendar') }}" class="nav-link active">📅 Agendar Cita</a>
+            <a href="{{ url_for('admin') }}" class="nav-link">👨‍💼 Panel Administrativo</a>
+        </nav>
+        
+        <main>
+            <div class="schedule-container">
+                <form method="POST" action="{{ url_for('resultado') }}" class="appointment-form">
+                    <h2>👤 Información Personal</h2>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Nombre Completo:</label>
+                            <input type="text" id="name" name="name" required 
+                                   placeholder="Ej: Juan Pérez García">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" required 
+                                   placeholder="Ej: juan.perez@email.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Teléfono:</label>
+                            <input type="tel" id="phone" name="phone" required 
+                                   placeholder="Ej: +1234567890">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="passport">Número de Pasaporte:</label>
+                            <input type="text" id="passport" name="passport" required 
+                                   placeholder="Ej: AB1234567">
+                        </div>
+                    </div>
+                    
+                    <h2>📅 Selección de Fecha y Hora</h2>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="date">Fecha Preferida:</label>
+                            <input type="date" id="date" name="date" min="{{ today }}" required>
+                            <small>Seleccione una fecha dentro de los próximos 30 días</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time">Hora Preferida:</label>
+                            <select id="time" name="time" required>
+                                <option value="">Seleccione una hora</option>
+                                <option value="09:00">09:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="14:00">02:00 PM</option>
+                                <option value="15:00">03:00 PM</option>
+                                <option value="16:00">04:00 PM</option>
+                            </select>
+                            <small>Horarios de atención: Mañana 9:00-12:00, Tarde 2:00-5:00</small>
+                        </div>
+                    </div>
+                    
+                    <div id="available-slots" class="available-slots">
+                        <p class="info-text">Seleccione una fecha para ver la disponibilidad</p>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            📅 Agendar Cita
+                        </button>
+                        <p class="form-note">
+                            Al agendar, acepta que el sistema pueda asignar automáticamente 
+                            una cita alternativa cuando haya pocas citas disponibles.
+                        </p>
+                    </div>
+                </form>
+
+                <div class="info-sidebar">
+                    <h3>ℹ️ Información Importante</h3>
+                    <div class="info-card">
+                        <h4>Capacidad por Horario</h4>
+                        <p>Máximo <strong>10 personas</strong> por horario disponible</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Asignación Automática</h4>
+                        <p>Cuando quedan <strong>2 o menos citas</strong> en un horario, 
+                           el sistema puede asignar automáticamente</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Árbol de Decisión</h4>
+                        <p>El sistema sigue este orden:</p>
+                        <ol>
+                            <li>Fecha y hora preferida</li>
+                            <li>Alternativas mismo día</li>
+                            <li>Próximos días mismo horario</li>
+                            <li>Primer disponible</li>
+                        </ol>
+                    </div>
+                    <div class="info-card">
+                        <h4>Documentos Requeridos</h4>
+                        <ul>
+                            <li>Pasaporte vigente</li>
+                            <li>Formulario de solicitud</li>
+                            <li>Fotografías recientes</li>
+                            <li>Comprobantes requeridos</li>
+                        </ul>
+                    </div>
+          <div id="chatbot-container" class="chatbot-container">
+    <div class="chatbot-header" onclick="toggleChat()">
+        Chat Asistente 💬 (VisaBot)
+    </div>
+    <div id="chatbot-window" class="chatbot-window">
+        <div id="chat-history" class="chat-history">
+            <div class="message bot-message initial-message">
+                ¡Hola! Soy VisaBot, tu asistente para citas. ¿En qué puedo ayudarte hoy?
+                <br><br>
+                **1**. Agendar una nueva cita.
+                <br>**2**. Consultar disponibilidad.
+                <br>**3**. Modificar o Cancelar.
+                <br>**4**. Finalizar.
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Escribe tu opción o mensaje..." onkeydown="handleKey(event)">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<button id="chat-toggle-button" class="chat-toggle-button" onclick="toggleChat()">
+    💬
+</button>
+
+<script>
+    // 1. OBTENER ELEMENTOS
+    const chatContainer = document.getElementById('chatbot-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const chatToggleButton = document.getElementById('chat-toggle-button'); // <-- Nueva referencia
+
+    // 2. FUNCIÓN DE MOSTRAR/OCULTAR (TOGGLE)
+    function toggleChat() {
+        // Alterna la clase 'active' en el contenedor principal (esto controla el display: flex/none en CSS)
+        chatContainer.classList.toggle('active');
+
+        if (chatContainer.classList.contains('active')) {
+            // Si el chat está ABIERTO: Cambia el botón a cerrar (X y Rojo)
+            chatToggleButton.innerHTML = '✖️';
+            chatToggleButton.style.background = '#e74c3c'; // Rojo
+            chatInput.focus();
+        } else {
+            // Si el chat está CERRADO: Vuelve el botón a abrir (💬 y Verde)
+            chatToggleButton.innerHTML = '💬';
+            chatToggleButton.style.background = '#27ae60'; // Verde
+        }
+    }
+
+    // 3. AÑADIR MENSAJE AL HISTORIAL
+    function appendMessage(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        // Usa innerHTML para interpretar los saltos de línea y el formato (negritas)
+        messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // 4. ENVÍO DE MENSAJE A FLASK
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message === '') return;
+
+        appendMessage('user', message);
+        chatInput.value = '';
+        chatInput.disabled = true;
+
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('message', 'bot-message', 'loading-indicator');
+        loadingMessage.innerHTML = 'Escribiendo...';
+        chatHistory.appendChild(loadingMessage);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        fetch('/chatbot_api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', data.response);
+            chatInput.disabled = false;
+            chatInput.focus();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', '❌ Error: No se pudo conectar con el asistente. Escribe **MENU** para reiniciar.');
+            chatInput.disabled = false;
+        });
+    }
+
+    // 5. MANEJAR TECLA ENTER
+    function handleKey(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    // 6. INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', function() {
+        // Asegura que el chatbox esté cerrado al cargar la página
+        chatContainer.classList.remove('active');
+        // Asegura que el botón de toggle tenga el icono y color inicial correcto
+        chatToggleButton.innerHTML = '💬';
+        chatToggleButton.style.background = '#27ae60'; 
+    });
+</script>
+</body>
+</html>

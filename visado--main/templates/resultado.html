@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado de Cita - Sistema de Visa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Resultado de la Solicitud de Cita</h1>
+            <p class="subtitle">Detalles de su agendamiento</p>
+        </header>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}" class="nav-link">🏠 Inicio</a>
+            <a href="{{ url_for('agendar') }}" class="nav-link">📅 Agendar Cita</a>
+            <a href="{{ url_for('admin') }}" class="nav-link">👨‍💼 Panel Administrativo</a>
+        </nav>
+        
+        <main>
+            <div class="result-section {% if result.status == 'success' %}success{% else %}error{% endif %}">
+                <h2>Resultado del Agendamiento</h2>
+                {% if result.status == 'success' %}
+                    <div class="success-message">
+                        <div class="success-header">
+                            <h3>✅ ¡Cita Agendada Exitosamente!</h3>
+                            <div class="success-badge">Confirmada</div>
+                        </div>
+                        
+                        <div class="appointment-details">
+                            <div class="detail-card">
+                                <h4>📅 Información de la Cita</h4>
+                                <div class="detail-item">
+                                    <strong>ID de Cita:</strong>
+                                    <code class="appointment-id">{{ result.appointment_id }}</code>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Fecha:</strong>
+                                    <span class="highlight">{{ result.date }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Hora:</strong>
+                                    <span class="highlight">{{ result.time }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Estado:</strong>
+                                    <span class="status-badge pending">En espera</span>
+                                </div>
+                                {% if result.auto_assigned %}
+                                    <div class="auto-assigned-note">
+                                        <p>⚠️ <strong>Nota importante:</strong> {{ result.reason }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="detail-card">
+                                <h4>👤 Información Personal</h4>
+                                <div class="detail-item">
+                                    <strong>Nombre:</strong>
+                                    {{ result.user_data.name }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Email:</strong>
+                                    {{ result.user_data.email }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Teléfono:</strong>
+                                    {{ result.user_data.phone }}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Pasaporte:</strong>
+                                    {{ result.user_data.passport }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="next-steps">
+                            <h4>🚀 Próximos Pasos</h4>
+                            <div class="steps-grid">
+                                <div class="step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <strong>Preparar Documentos</strong>
+                                        <p>Reúna todos los documentos requeridos</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <strong>Llegar Temprano</strong>
+                                        <p>15 minutos antes de su cita</p>
+                                    </div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <strong>Presentarse</strong>
+                                        <p>En el módulo asignado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="instructions">
+                            <h4>📋 Instrucciones importantes:</h4>
+                            <ul>
+                                <li><strong>Llegue 15 minutos antes</strong> de su hora de cita</li>
+                                <li><strong>Traiga su pasaporte original</strong> y todos los documentos requeridos</li>
+                                <li><strong>Guarde su ID de cita</strong> para cualquier consulta: <code>{{ result.appointment_id }}</code></li>
+                                <li><strong>Presentarse en recepción</strong> con su documentación completa</li>
+                            </ul>
+                        </div>
+
+                        <div class="contact-info">
+                            <h4>📞 Información de Contacto</h4>
+                            <p>Si necesita modificar su cita o tiene preguntas, contacte al administrador del sistema.</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="error-message">
+                        <div class="error-header">
+                            <h3>❌ Error al Agendar Cita</h3>
+                            <div class="error-badge">No Confirmada</div>
+                        </div>
+                        
+                        <div class="error-details">
+                            <p><strong>Motivo:</strong> {{ result.message }}</p>
+                            <p>El sistema no pudo encontrar una cita disponible con los criterios seleccionados.</p>
+                            
+                            <div class="suggestions">
+                                <h4>💡 Sugerencias:</h4>
+                                <ul>
+                                    <li>Intente con una fecha diferente</li>
+                                    <li>Seleccione un horario menos concurrido</li>
+                                    <li>Considere agendar con varios días de anticipación</li>
+                                    <li>Contacte al administrador para asistencia</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="action-buttons">
+                    {% if result.status == 'success' %}
+                        <a href="{{ url_for('agendar') }}" class="btn btn-secondary">Agendar Otra Cita</a>
+                        <button onclick="window.print()" class="btn btn-primary">
+                            🖨️ Imprimir Confirmación
+                        </button>
+                    {% else %}
+                        <a href="{{ url_for('agendar') }}" class="btn btn-primary">Intentar Nuevamente</a>
+                    {% endif %}
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">Volver al Inicio</a>
+                </div>
+
+                {% if result.status == 'success' %}
+                <div class="print-section">
+                    <div class="print-confirmation">
+                        <h4>🖨️ Para Imprimir</h4>
+                        <div class="print-content">
+                            <h3>Comprobante de Cita - Sistema de Visa</h3>
+                            <p><strong>ID de Cita:</strong> {{ result.appointment_id }}</p>
+                            <p><strong>Nombre:</strong> {{ result.user_data.name }}</p>
+                            <p><strong>Fecha:</strong> {{ result.date }}</p>
+                            <p><strong>Hora:</strong> {{ result.time }}</p>
+                            <p><strong>Pasaporte:</strong> {{ result.user_data.passport }}</p>
+                            <p><strong>Fecha de agendamiento:</strong> {{ result.user_data.get('created_at', 'Hoy') }}</p>
+                            <hr>
+                            <p><em>Por favor, presente este comprobante al llegar a su cita.</em></p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Sistema de Agendamiento de Citas para Visa. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <style>
+        .success-header, .error-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .success-badge, .error-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .success-badge {
+            background: #27ae60;
+            color: white;
+        }
+
+        .error-badge {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .appointment-id {
+            background: #2c3e50;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .next-steps {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #2c3e50;
+        }
+
+        .step-content p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .contact-info {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .suggestions {
+            background: #fff3cd;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+            border: 1px solid #ffeaa7;
+        }
+
+        .suggestions ul {
+            margin-top: 1rem;
+        }
+
+        .suggestions li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .suggestions li::before {
+            content: '💡';
+            position: absolute;
+            left: 0;
+        }
+
+        .print-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #ddd;
+        }
+
+        .print-confirmation {
+            background: white;
+            padding: 2rem;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+        }
+
+        .print-content {
+            font-family: Arial, sans-serif;
+        }
+
+        .print-content h3 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .print-content hr {
+            margin: 1rem 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+
+        @media print {
+            .main-nav, .action-buttons, .print-section:last-child {
+                display: none;
+            }
+            
+            .result-section {
+                box-shadow: none;
+                border: none;
+            }
+            
+            .print-content {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .success-header, .error-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

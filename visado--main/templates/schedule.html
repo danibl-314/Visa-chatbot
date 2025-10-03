@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendar Cita - Sistema de Visa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 Agendar Cita para Visa</h1>
+            <p class="subtitle">Complete el formulario para programar su cita</p>
+        </header>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}" class="nav-link">🏠 Inicio</a>
+            <a href="{{ url_for('schedule') }}" class="nav-link active">📅 Agendar Cita</a>
+            <a href="{{ url_for('admin') }}" class="nav-link">👨‍💼 Panel Administrativo</a>
+        </nav>
+        
+        <main>
+            {% if result %}
+                <div class="result-section {% if result.status == 'success' %}success{% else %}error{% endif %}">
+                    <h2>Resultado de la Solicitud</h2>
+                    {% if result.status == 'success' %}
+                        <div class="success-message">
+                            <div class="success-header">
+                                <h3>✅ ¡Cita Agendada Exitosamente!</h3>
+                            </div>
+                            <div class="appointment-details">
+                                <div class="detail-card">
+                                    <h4>Información de la Cita</h4>
+                                    <p><strong>ID de Cita:</strong> <code>{{ result.appointment_id }}</code></p>
+                                    <p><strong>Fecha:</strong> {{ result.date }}</p>
+                                    <p><strong>Hora:</strong> {{ result.time }}</p>
+                                    {% if result.auto_assigned %}
+                                        <div class="auto-assigned-note">
+                                            <p>⚠️ <strong>Nota importante:</strong> {{ result.reason }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="detail-card">
+                                    <h4>Información Personal</h4>
+                                    <p><strong>Nombre:</strong> {{ result.user_data.name }}</p>
+                                    <p><strong>Email:</strong> {{ result.user_data.email }}</p>
+                                    <p><strong>Teléfono:</strong> {{ result.user_data.phone }}</p>
+                                    <p><strong>Pasaporte:</strong> {{ result.user_data.passport }}</p>
+                                </div>
+                            </div>
+                            <div class="instructions">
+                                <h4>📋 Instrucciones importantes:</h4>
+                                <ul>
+                                    <li>Llegue 15 minutos antes de su cita</li>
+                                    <li>Traiga su pasaporte original y documentos requeridos</li>
+                                    <li>Guarde su ID de cita para cualquier consulta</li>
+                                </ul>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="error-message">
+                            <h3>❌ Error al Agendar Cita</h3>
+                            <p>{{ result.message }}</p>
+                            <p>Por favor, intente con otra fecha o contacte al administrador.</p>
+                        </div>
+                    {% endif %}
+                    <div class="action-buttons">
+                        <a href="{{ url_for('schedule') }}" class="btn btn-primary">Agendar Otra Cita</a>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">Volver al Inicio</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="schedule-container">
+                    <form method="POST" class="appointment-form">
+                        <h2>👤 Información Personal</h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name">Nombre Completo:</label>
+                                <input type="text" id="name" name="name" required 
+                                       placeholder="Ej: Juan Pérez García">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" id="email" name="email" required 
+                                       placeholder="Ej: juan.perez@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Teléfono:</label>
+                                <input type="tel" id="phone" name="phone" required 
+                                       placeholder="Ej: +1234567890">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="passport">Número de Pasaporte:</label>
+                                <input type="text" id="passport" name="passport" required 
+                                       placeholder="Ej: AB1234567">
+                            </div>
+                        </div>
+                        
+                        <h2>📅 Selección de Fecha y Hora</h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="date">Fecha Preferida:</label>
+                                <input type="date" id="date" name="date" min="{{ today }}" required>
+                                <small>Seleccione una fecha dentro de los próximos 30 días</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="time">Hora Preferida:</label>
+                                <select id="time" name="time" required>
+                                    <option value="">Seleccione una hora</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                </select>
+                                <small>Horarios de atención: Mañana 9:00-12:00, Tarde 2:00-5:00</small>
+                            </div>
+                        </div>
+                        
+                        <div id="available-slots" class="available-slots">
+                            <p class="info-text">Seleccione una fecha para ver la disponibilidad</p>
+                        </div>
+
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary btn-large">
+                                📅 Agendar Cita
+                            </button>
+                            <p class="form-note">
+                                Al agendar, acepta que el sistema pueda asignar automáticamente 
+                                una cita alternativa cuando haya pocas citas disponibles.
+                            </p>
+                        </div>
+                    </form>
+
+                    <div class="info-sidebar">
+                        <h3>ℹ️ Información Importante</h3>
+                        <div class="info-card">
+                            <h4>Capacidad por Horario</h4>
+                            <p>Máximo <strong>10 personas</strong> por horario disponible</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Asignación Automática</h4>
+                            <p>Cuando quedan <strong>2 o menos citas</strong> en un horario, 
+                               el sistema puede asignar automáticamente</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Documentos Requeridos</h4>
+                            <ul>
+                                <li>Pasaporte vigente</li>
+                                <li>Formulario de solicitud</li>
+                                <li>Fotografías recientes</li>
+                                <li>Comprobantes requeridos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            const timeSelect = document.getElementById('time');
+            const slotsDiv = document.getElementById('available-slots');
+
+            // Establecer fecha mínima como hoy
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+
+            // Calcular fecha máxima (30 días desde hoy)
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + 30);
+            const maxDateStr = maxDate.toISOString().split('T')[0];
+            dateInput.max = maxDateStr;
+
+            function updateAvailableSlots() {
+                const date = dateInput.value;
+                if (date) {
+                    fetch(`/api/available_slots?date=${date}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const slots = data.available_slots;
+                            
+                            if (Object.keys(slots).length === 0) {
+                                slotsDiv.innerHTML = `
+                                    <div class="no-slots">
+                                        <h4>❌ No hay citas disponibles para esta fecha</h4>
+                                        <p>Por favor, seleccione otra fecha.</p>
+                                    </div>
+                                `;
+                            } else {
+                                let html = '<h4>🕒 Horarios Disponibles:</h4><div class="slots-grid">';
+                                for (const [time, slot] of Object.entries(slots)) {
+                                    const available = slot.available;
+                                    const almostFull = slot.almost_full;
+                                    const timeLabel = time <= '11:00' ? time + ' AM' : time + ' PM';
+                                    
+                                    html += `
+                                        <div class="slot-item ${almostFull ? 'almost-full' : 'available'}">
+                                            <div class="slot-time">${timeLabel}</div>
+                                            <div class="slot-availability">
+                                                <span class="available-count">${available}</span>/
+                                                <span class="max-count">${slot.max}</span>
+                                            </div>
+                                            ${almostFull ? '<div class="slot-warning">⚠️ Quedan pocas</div>' : ''}
+                                        </div>
+                                    `;
+                                }
+                                html += '</div>';
+                                slotsDiv.innerHTML = html;
+                            }
+                        })
+                        .catch(error => {
+                            slotsDiv.innerHTML = `
+                                <div class="error-message">
+                                    <p>Error al cargar la disponibilidad. Intente nuevamente.</p>
+                                </div>
+                            `;
+                        });
+                } else {
+                    slotsDiv.innerHTML = '<p class="info-text">Seleccione una fecha para ver la disponibilidad</p>';
+                }
+            }
+
+            dateInput.addEventListener('change', updateAvailableSlots);
+            
+            // Cargar slots disponibles si ya hay una fecha seleccionada
+            if (dateInput.value) {
+                updateAvailableSlots();
+            }
+        });
+    </script>
+</body>
+</html>

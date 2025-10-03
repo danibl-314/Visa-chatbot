@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Sistema de Visa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👨‍💼 Panel Administrativo - Sistema de Visa</h1>
+            <p class="subtitle">Gestión de citas y módulos de atención</p>
+        </header>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('index') }}" class="nav-link">🏠 Inicio</a>
+            <a href="{{ url_for('agendar') }}" class="nav-link">📅 Agendar Cita</a>
+            <a href="{{ url_for('admin') }}" class="nav-link active">👨‍💼 Panel Administrativo</a>
+        </nav>
+        
+        <main>
+            <section class="stats-section">
+                <h2>📊 Estadísticas del Sistema</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <h3>Total Citas</h3>
+                        <p class="stat-number">{{ stats.total_appointments }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <h3>En Espera</h3>
+                        <p class="stat-number">{{ stats.pending }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <h3>En Progreso</h3>
+                        <p class="stat-number">{{ stats.in_progress }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <h3>Completadas</h3>
+                        <p class="stat-number">{{ stats.completed }}</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <h3>Slots Casi Llenos</h3>
+                        <p class="stat-number">{{ stats.almost_full_slots }}</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="admin-grid">
+                <section class="modules-section">
+                    <h2>🏢 Estado de Módulos de Atención</h2>
+                    <div class="modules-grid">
+                        {% for module_id, appointment_id in stats.modules_status.items() %}
+                        <div class="module-card" id="module-{{ module_id }}">
+                            <h3>Módulo {{ module_id }}</h3>
+                            <div class="module-status">
+                                {% if appointment_id %}
+                                    {% set appointment = appointments[appointment_id] %}
+                                    <div class="module-busy">
+                                        <div class="status-indicator busy"></div>
+                                        <p class="status-text">Ocupado</p>
+                                        <div class="current-appointment">
+                                            <h4>👤 En atención:</h4>
+                                            <p><strong>Nombre:</strong> {{ appointment.user_data.name }}</p>
+                                            <p><strong>Pasaporte:</strong> {{ appointment.user_data.passport }}</p>
+                                            <p><strong>Hora inicio:</strong> {{ appointment.start_time }}</p>
+                                            <p><strong>ID:</strong> <code>{{ appointment_id[:8] }}...</code></p>
+                                        </div>
+                                        <button onclick="completeAppointment('{{ module_id }}')" 
+                                                class="btn btn-complete">
+                                            ✅ Completar Cita
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="module-free">
+                                        <div class="status-indicator free"></div>
+                                        <p class="status-text">Disponible</p>
+                                        <p>✅ Listo para atender</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="queue-section">
+                    <h2>👥 Gestión de Cola de Espera</h2>
+                    
+                    <div class="queue-controls">
+                        <button onclick="callNextPerson()" class="btn btn-primary btn-large">
+                            📢 Llamar Siguiente Persona
+                        </button>
+                        <div class="queue-stats">
+                            <span class="queue-count">{{ stats.waiting_queue|length }} personas en espera</span>
+                        </div>
+                    </div>
+                    
+                    <div id="next-person-result" class="result-area"></div>
+                    
+                    <h3>📋 Cola de Espera</h3>
+                    <div class="queue-list">
+                        {% if stats.waiting_queue %}
+                            {% for appointment_id in stats.waiting_queue %}
+                                {% set appointment = appointments[appointment_id] %}
+                                <div class="queue-item">
+                                    <div class="queue-item-main">
+                                        <div class="queue-number">{{ loop.index }}</div>
+                                        <div class="queue-info">
+                                            <strong>{{ appointment.user_data.name }}</strong>
+                                            <span class="queue-details">
+                                                {{ appointment.date }} {{ appointment.time }} | 
+                                                {{ appointment.user_data.passport }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="queue-meta">
+                                        <small>ID: {{ appointment_id[:8] }}...</small>
+                                        {% if appointment.auto_assigned %}
+                                            <span class="auto-badge">Auto</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-queue">
+                                <p>🎉 No hay personas en espera</p>
+                                <p>Todos los usuarios han sido atendidos</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+
+            <section class="daily-appointments">
+                <h2>📅 Consulta de Citas por Fecha</h2>
+                <div class="date-selector">
+                    <input type="date" id="date-selector" class="date-input">
+                    <button onclick="loadDailyAppointments()" class="btn btn-secondary">
+                        🔍 Consultar Citas
+                    </button>
+                </div>
+                <div id="daily-appointments-result" class="appointments-result"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function callNextPerson() {
+            fetch('/api/next_person', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('next-person-result');
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success-message">
+                            <h4>✅ Persona asignada exitosamente al Módulo ${data.module}</h4>
+                            <div class="assignment-details">
+                                <p><strong>Nombre:</strong> ${data.appointment.user_data.name}</p>
+                                <p><strong>Pasaporte:</strong> ${data.appointment.user_data.passport}</p>
+                                <p><strong>Email:</strong> ${data.appointment.user_data.email}</p>
+                                <p><strong>Hora de inicio:</strong> ${data.appointment.start_time}</p>
+                                <p><strong>ID Cita:</strong> <code>${data.appointment.id}</code></p>
+                            </div>
+                        </div>
+                    `;
+                    // Recargar la página después de 3 segundos para actualizar el estado
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            <h4>❌ ${data.message}</h4>
+                            <p>Verifique que haya personas en espera y módulos disponibles.</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                const resultDiv = document.getElementById('next-person-result');
+                resultDiv.innerHTML = `
+                    <div class="error-message">
+                        <h4>❌ Error de conexión</h4>
+                        <p>No se pudo conectar con el servidor.</p>
+                    </div>
+                `;
+            });
+        }
+
+        function completeAppointment(moduleId) {
+            if (confirm(`¿Está seguro de que desea marcar como completada la cita en el Módulo ${moduleId}?`)) {
+                fetch('/api/complete_appointment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ module_id: moduleId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ Cita completada para: ${data.appointment.user_data.name}`);
+                        location.reload();
+                    } else {
+                        alert(`❌ ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Error de conexión al completar la cita');
+                });
+            }
+        }
+
+        function loadDailyAppointments() {
+            const dateInput = document.getElementById('date-selector');
+            const date = dateInput.value;
+            
+            if (!date) {
+                alert('Por favor, seleccione una fecha');
+                return;
+            }
+
+            fetch(`/api/daily_appointments?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('daily-appointments-result');
+                    const appointments = data.appointments;
+                    
+                    if (appointments.length === 0) {
+                        resultDiv.innerHTML = `
+                            <div class="empty-state">
+                                <p>No hay citas agendadas para ${date}</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = `
+                            <h4>Citas para ${date} (${appointments.length} total)</h4>
+                            <div class="appointments-list">
+                        `;
+                        
+                        appointments.forEach(appointment => {
+                            const statusClass = appointment.status === 'completed' ? 'completed' : 
+                                              appointment.status === 'in_progress' ? 'in-progress' : 'pending';
+                            
+                            html += `
+                                <div class="appointment-item ${statusClass}">
+                                    <div class="appointment-header">
+                                        <strong>${appointment.user_data.name}</strong>
+                                        <span class="appointment-time">${appointment.time}</span>
+                                    </div>
+                                    <div class="appointment-details">
+                                        <span>Pasaporte: ${appointment.user_data.passport}</span>
+                                        <span class="status-badge ${statusClass}">${appointment.status}</span>
+                                        ${appointment.module ? `<span>Módulo: ${appointment.module}</span>` : ''}
+                                    </div>
+                                    ${appointment.auto_assigned ? 
+                                        '<div class="auto-badge">Asignación automática</div>' : ''}
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        resultDiv.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    const resultDiv = document.getElementById('daily-appointments-result');
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            <p>Error al cargar las citas. Intente nuevamente.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Establecer fecha por defecto como hoy
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-selector').value = today;
+        });
+    </script>
+<div id="chatbot-container" class="chatbot-container">
+    <div class="chatbot-header" onclick="toggleChat()">
+        Chat Asistente 💬 (VisaBot)
+    </div>
+    <div id="chatbot-window" class="chatbot-window">
+        <div id="chat-history" class="chat-history">
+            <div class="message bot-message initial-message">
+                ¡Hola! Soy VisaBot, tu asistente para citas. ¿En qué puedo ayudarte hoy?
+                <br><br>
+                **1**. Agendar una nueva cita.
+                <br>**2**. Consultar disponibilidad.
+                <br>**3**. Modificar o Cancelar.
+                <br>**4**. Finalizar.
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Escribe tu opción o mensaje..." onkeydown="handleKey(event)">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<button id="chat-toggle-button" class="chat-toggle-button" onclick="toggleChat()">
+    💬
+</button>
+
+<script>
+    // 1. OBTENER ELEMENTOS
+    const chatContainer = document.getElementById('chatbot-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const chatToggleButton = document.getElementById('chat-toggle-button'); // <-- Nueva referencia
+
+    // 2. FUNCIÓN DE MOSTRAR/OCULTAR (TOGGLE)
+    function toggleChat() {
+        // Alterna la clase 'active' en el contenedor principal (esto controla el display: flex/none en CSS)
+        chatContainer.classList.toggle('active');
+
+        if (chatContainer.classList.contains('active')) {
+            // Si el chat está ABIERTO: Cambia el botón a cerrar (X y Rojo)
+            chatToggleButton.innerHTML = '✖️';
+            chatToggleButton.style.background = '#e74c3c'; // Rojo
+            chatInput.focus();
+        } else {
+            // Si el chat está CERRADO: Vuelve el botón a abrir (💬 y Verde)
+            chatToggleButton.innerHTML = '💬';
+            chatToggleButton.style.background = '#27ae60'; // Verde
+        }
+    }
+
+    // 3. AÑADIR MENSAJE AL HISTORIAL
+    function appendMessage(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        // Usa innerHTML para interpretar los saltos de línea y el formato (negritas)
+        messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // 4. ENVÍO DE MENSAJE A FLASK
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message === '') return;
+
+        appendMessage('user', message);
+        chatInput.value = '';
+        chatInput.disabled = true;
+
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('message', 'bot-message', 'loading-indicator');
+        loadingMessage.innerHTML = 'Escribiendo...';
+        chatHistory.appendChild(loadingMessage);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        fetch('/chatbot_api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', data.response);
+            chatInput.disabled = false;
+            chatInput.focus();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            chatHistory.removeChild(loadingMessage);
+            appendMessage('bot', '❌ Error: No se pudo conectar con el asistente. Escribe **MENU** para reiniciar.');
+            chatInput.disabled = false;
+        });
+    }
+
+    // 5. MANEJAR TECLA ENTER
+    function handleKey(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    // 6. INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', function() {
+        // Asegura que el chatbox esté cerrado al cargar la página
+        chatContainer.classList.remove('active');
+        // Asegura que el botón de toggle tenga el icono y color inicial correcto
+        chatToggleButton.innerHTML = '💬';
+        chatToggleButton.style.background = '#27ae60'; 
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Variables de entorno secretas (¡CRUCIAL!)
+.env
+
+# Directorios de Python y caché
+__pycache__/
+*.pyc
+venv/
+.ipynb_checkpoints/
