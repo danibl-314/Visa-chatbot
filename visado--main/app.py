@@ -1,5 +1,3 @@
-# app.py
-
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, timedelta
 import json
@@ -153,7 +151,7 @@ class VisaSchedulingSystem:
             'total_cupos': total_slots,
             'citas_por_visa': visa_counts,
             'appointments_list': list(self.appointments.values()),
-            'modules_status': self.modules  # <--- CORRECCIÓN IMPLEMENTADA
+            'modules_status': self.modules 
         }
 
 
@@ -162,7 +160,7 @@ scheduling_system = VisaSchedulingSystem()
 
 
 ################################################################################
-### CHATBOT: FUNCIONES Y RUTAS DEL CHAT
+### RUTAS DE LA APLICACIÓN (Web)
 ################################################################################
 
 def get_main_menu_text():
@@ -176,7 +174,6 @@ def get_main_menu_text():
         "**4**. Finalizar la conversación."
     )
 
-# La función index, agendar, resultado y admin quedan IGUALES a como las tenías
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -208,7 +205,7 @@ def resultado():
             'time': preferred_time
         }
     else:
-         result = {
+        result = {
             'status': 'error',
             'message': 'No se pudo agendar la cita. El cupo ya no está disponible.',
             'date': preferred_date,
@@ -229,6 +226,37 @@ def admin():
         appointments=stats_data['appointments_list']
     )
 
+# ----------------------------------------------------------------------
+# RUTAS DE LA APLICACIÓN (API - Resuelve el Error 404)
+# ----------------------------------------------------------------------
+
+# ESTA FUNCIÓN ESTÁ AHORA EN SU LUGAR CORRECTO
+@app.route('/api/daily_appointments', methods=['GET'])
+def get_daily_appointments():
+    """
+    Devuelve la disponibilidad de citas (slots) para una fecha específica.
+    El JavaScript de agendar.html accede a esta ruta.
+    """
+    # 1. Obtener el parámetro 'date' de la URL (ej: ?date=2025-10-04)
+    date_str = request.args.get('date')
+
+    if not date_str:
+        # Si falta el parámetro 'date', devuelve un error 400 (Bad Request)
+        return jsonify({"error": "Falta el parámetro 'date'"}), 400
+
+    # Usamos la variable global 'scheduling_system'
+    global scheduling_system
+    
+    # 3. Obtener los slots para la fecha. Usamos .get() para evitar KeyErrors
+    daily_slots = scheduling_system.slots.get(date_str, {})
+    
+    # 4. Devolver la disponibilidad de citas como JSON
+    return jsonify(daily_slots)
+
+
+################################################################################
+### CHATBOT: FUNCIONES Y RUTAS DEL CHAT
+################################################################################
 
 @app.route('/chatbot_api', methods=['POST'])
 def chatbot_api():
@@ -283,7 +311,7 @@ def chatbot_api():
             available_times = {h: data for h, data in slots.items() if data['available'] > 0}
             
             if not available_times:
-                 return jsonify({'response': f'No hay disponibilidad para el {date_str}. Ingresa **otra fecha** (YYYY-MM-DD) o escribe **MENU**.'})
+                return jsonify({'response': f'No hay disponibilidad para el {date_str}. Ingresa **otra fecha** (YYYY-MM-DD) o escribe **MENU**.'})
 
             session['booking_data']['date_str'] = date_str
             session['available_slots'] = slots 
@@ -384,11 +412,11 @@ def chatbot_api():
         if user_input == '3.2':
             # CANCELAR (Usa el método corregido con liberación de cupo)
             if scheduling_system.cancel_appointment(appointment_id):
-                 session.clear()
-                 return jsonify({'response': '❌ Tu cita ha sido **cancelada** con éxito y el cupo ha sido liberado. Escribe **MENU**.'})
+                session.clear()
+                return jsonify({'response': '❌ Tu cita ha sido **cancelada** con éxito y el cupo ha sido liberado. Escribe **MENU**.'})
             else:
-                 session.clear()
-                 return jsonify({'response': 'Hubo un error al cancelar. Escribe **MENU** para volver al inicio.'})
+                session.clear()
+                return jsonify({'response': 'Hubo un error al cancelar. Escribe **MENU** para volver al inicio.'})
 
         elif user_input == '3.1':
             # MODIFICAR (Reutilizamos el flujo de agendamiento)
@@ -404,4 +432,5 @@ def chatbot_api():
 
 
 if __name__ == '__main__':
+    # Ejecuta la aplicación de Flask
     app.run(debug=True)
